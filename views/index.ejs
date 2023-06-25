@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Image Carousel</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <!-- <h1>Image Carousel</h1> -->
+
+    <div class="selected">Selected : <span id="item-count"></span></div>
+    <div class="carousel">
+      <div class="carousel-inner">
+        <% files.forEach((file) => { %>
+        <div class="carousel-item">
+          <img
+            src="/images/<%= file %>"
+            alt="<%= file %>"
+            alt="..."
+            loading="lazy"
+          />
+          <label for="<%= file %>">
+            <input
+              class="chk"
+              type="checkbox"
+              id="<%= file %>"
+              name="images"
+              value="<%= file %>"
+            />
+          </label>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+
+    <div class="buttons">
+      <div>
+        <button class="prev-button" onclick="carousel.previous()">
+          Previous
+        </button>
+        <button class="next-button" onclick="carousel.next()">Next</button>
+        <button class="save-button" onclick="saveSelectedImages()">
+          Save Selected Images
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const carousel = {
+        currentSlide: 0,
+        slides: document.querySelectorAll('.carousel-item'),
+
+        previous() {
+          this.slides[this.currentSlide].classList.remove('active');
+          this.currentSlide =
+            (this.currentSlide - 1 + this.slides.length) % this.slides.length;
+          this.slides[this.currentSlide].classList.add('active');
+        },
+
+        next() {
+          this.slides[this.currentSlide].classList.remove('active');
+          this.currentSlide = (this.currentSlide + 1) % this.slides.length;
+          this.slides[this.currentSlide].classList.add('active');
+        },
+      };
+      carousel.slides[0].classList.add('active');
+      let selectedCount = 0;
+
+      function setCount() {
+        const itemCountEl = document.querySelector('#item-count');
+        itemCountEl.innerHTML = `${selectedCount}/${carousel.slides.length}`;
+      }
+      setCount();
+      document.querySelector('.carousel').addEventListener('click', (e) => {
+        if (e.target.classList.contains('chk')) {
+          if (e.target.checked) {
+            selectedCount++;
+          } else {
+            selectedCount--;
+          }
+        }
+        setCount();
+      });
+      function saveSelectedImages() {
+        const selectedImages = Array.from(
+          document.querySelectorAll('input[name="images"]:checked')
+        ).map((input) => input.value);
+
+        fetch('/save', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ images: selectedImages }),
+        })
+          .then((response) => {
+            if (response.ok) {
+              alert('Selected images saved successfully!');
+            } else {
+              alert('Error saving selected images.');
+            }
+          })
+          .catch((error) => {
+            console.error('Error saving selected images:', error);
+          });
+      }
+    </script>
+  </body>
+</html>
